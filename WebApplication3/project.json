@@ -1,0 +1,5 @@
+﻿{
+  "dependencies": {
+    "Npgsql.EntityFrameworkCore.PostgreSQL": "1.0.0"
+  }
+}

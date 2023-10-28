@@ -5,9 +5,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace WebApplication3
 {
@@ -43,6 +47,7 @@ namespace WebApplication3
         {
             operation.Id = operations.Count + 1;
             operations.Add(operation);
+            
             return CreatedAtAction(nameof(GetOperation), new { id = operation.Id }, operation);
         }
 
@@ -74,9 +79,24 @@ namespace WebApplication3
 
     public class Operation
     {
+        [Key]
         public int Id { get; set; }
+        
+        [Required]
         public string Name { get; set; }
         public string Description { get; set; }
+    }
+    
+    public sealed class ApplicationContext : DbContext
+    {
+        public DbSet<Operation> Operations { get; set; }
+        public ApplicationContext(DbContextOptions<ApplicationContext> options)
+            : base(options)
+        {
+            Database.EnsureCreated();
+            var databaseCreator = Database.GetService<IRelationalDatabaseCreator>();
+            databaseCreator.CreateTables();
+        }
     }
 
     public class StatusCodeException : Exception
@@ -89,7 +109,6 @@ namespace WebApplication3
         public HttpStatusCode StatusCode { get; set; }
     }
 
-    [Route("api/operations")]
     public class Program
     {
         public static void Main(string[] args)

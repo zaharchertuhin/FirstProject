@@ -1,13 +1,15 @@
+using System.Net.NetworkInformation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using System;
+using Microsoft.EntityFrameworkCore;
+/*using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading.Tasks;*/
 
 namespace WebApplication3
 {
@@ -24,6 +26,12 @@ namespace WebApplication3
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
+            
+            string connection = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<ApplicationContext>(options =>
+                options.UseNpgsql(connection));
+            services.AddControllersWithViews();
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "operations", Version = "v1" });
@@ -59,6 +67,7 @@ namespace WebApplication3
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
+                endpoints.MapControllers();
             });
         }
     }
