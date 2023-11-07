@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -21,92 +19,88 @@ namespace WebApplication3
     [Route("api/operations")]
     public class OperationsController : ControllerBase
     {
+        public OperationsController(ApplicationContext applicationContext)
+        {
+            this.applicationContext = applicationContext;
+        }
         private static List<Operation> operations = new List<Operation>();
+        private readonly ApplicationContext applicationContext;
 
         // GET api/operations
         [HttpGet]
-        public ActionResult<IEnumerable<Operation>> GetOperations()
+        public async Task<ActionResult<IEnumerable<Operation>>> GetOperations()
         {
-            return Ok(operations);
+            return await applicationContext.Operations.ToListAsync();
         }
 
         // GET api/operations/{id}
         [HttpGet("{id}")]
-        public ActionResult<Operation> GetOperation(int id)
+        public async Task<ActionResult<Operation>> GetOperation(int id)
         {
-            var operation = operations.Find(op => op.Id == id);
-            if (operation == null)
-                return NotFound();
-
-            return Ok(operation);
+            return await applicationContext.Operations.FindAsync(id);
         }
 
         // POST api/operations
         [HttpPost]
-        public ActionResult<Operation> CreateOperation(Operation operation)
+        public async Task<ActionResult<Operation>> CreateOperation(Operation operation)
         {
-            operation.Id = operations.Count + 1;
-            operations.Add(operation);
-            
+            /*operation.Id = operations.Count + 1;*/
+
+            await applicationContext.Operations.AddAsync(operation);
+            await applicationContext.SaveChangesAsync();
             return CreatedAtAction(nameof(GetOperation), new { id = operation.Id }, operation);
         }
-
+        
         // PUT api/operations/{id}
         [HttpPut("{id}")]
-        public ActionResult<Operation> UpdateOperation(int id, Operation updatedOperation)
+        public async Task<ActionResult<Operation>> UpdateOperation(int id, Operation updatedOperation)
         {
-            var operation = operations.Find(op => op.Id == id);
-            if (operation == null)
-                return NotFound();
+            
+            var operation = await applicationContext.Operations.FindAsync(id);
 
             operation.Name = updatedOperation.Name;
             operation.Description = updatedOperation.Description;
-            return Ok(operation);
+            
+            applicationContext.Operations.Update(operation);
+            await applicationContext.SaveChangesAsync();
+            
+            return CreatedAtAction(nameof(GetOperation), new { id = operation.Id }, operation);
+
         }
 
         // DELETE api/operations/{id}
         [HttpDelete("{id}")]
-        public ActionResult DeleteOperation(int id)
+        public async Task<ActionResult> DeleteOperation(int id)
         {
-            var operation = operations.Find(op => op.Id == id);
-            if (operation == null)
-                return NotFound();
+            var op = await applicationContext.Operations.FindAsync(id);
+             applicationContext.Operations.Remove(op);
+             await applicationContext.SaveChangesAsync();
+             return Ok();
 
-            operations.Remove(operation);
-            return NoContent();
         }
     }
 
-    public class Operation
-    {
-        [Key]
-        public int Id { get; set; }
-        
-        [Required]
-        public string Name { get; set; }
-        public string Description { get; set; }
-    }
-    
     public sealed class ApplicationContext : DbContext
     {
         public DbSet<Operation> Operations { get; set; }
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
-            : base(options)
-        {
-            Database.EnsureCreated();
-            var databaseCreator = Database.GetService<IRelationalDatabaseCreator>();
-            databaseCreator.CreateTables();
-        }
+            : base(options) { }
     }
-
-    public class StatusCodeException : Exception
+    
+    
+    public class Operation
     {
-        public StatusCodeException(HttpStatusCode statusCode)
-        {
-            StatusCode = statusCode;
-        }
 
-        public HttpStatusCode StatusCode { get; set; }
+        [System.ComponentModel.DataAnnotations.Key]
+        [Column("id")] 
+        public int Id { get; set; }
+
+        [Column("Name")] 
+        public string Name { get; set; }
+
+        [Column("Description")] 
+        public string Description { get; set; }
+        
     }
 
     public class Program

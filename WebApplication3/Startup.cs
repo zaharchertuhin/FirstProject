@@ -27,7 +27,7 @@ namespace WebApplication3
         {
             services.AddRazorPages();
             
-            string connection = Configuration.GetConnectionString("DefaultConnection");
+            var connection = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<ApplicationContext>(options =>
                 options.UseNpgsql(connection));
             services.AddControllersWithViews();

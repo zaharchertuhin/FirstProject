@@ -29,6 +29,9 @@
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
       "publishAllPorts": true
+    },
+    "newProfile1": {
+      "commandName": "Executable"
     }
   }
 }
